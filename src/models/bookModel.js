@@ -16,12 +16,16 @@ const bookSchema = new mongoose.Schema({
   },
   discountPercentage: {
     type: Number,
-    default: 0, // Default discount percentage is 0 if not provided
+    default: 0,
   },
   description: String,
   publishDate: Date,
   ISBN: String,
-  // Add more fields as needed
+  stock: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
 });
 
 const Book = mongoose.model("Book", bookSchema);

@@ -8,13 +8,15 @@ const {
 const {
   bookValidationRules,
   validate,
+  validateBookId,
+  validateQueryParams,
 } = require("../../middleware/validation");
 
 // Define book routes here
 
 // GET /books
-router.get("/", getAllBooks);
-router.get("/:id", getBookById);
+router.get("/", validateQueryParams, getAllBooks);
+router.get("/:id", validateBookId(), validate, getBookById);
 router.post("/", bookValidationRules(), validate, addBook);
 
 module.exports = router;
