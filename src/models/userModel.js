@@ -14,11 +14,7 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-  },
-  walletBalance: {
-    type: Number,
-    default: 0, // Default wallet balance is 0 if not provided
-  },
+  }
   // Add more user-related fields as needed
 });
 

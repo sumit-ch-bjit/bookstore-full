@@ -53,6 +53,10 @@ const validateQueryParams = (req, res, next) => {
   });
 };
 
+const loginValidationRules = () => {
+  return [body("email").isEmail().withMessage("Invalid Email").bail()];
+};
+
 const userValidationRules = () => {
   return [
     body("username")
@@ -61,7 +65,7 @@ const userValidationRules = () => {
       .isAlphanumeric()
       .withMessage("cannot be empty and must be alphanumeric")
       .bail(),
-    body("email").isEmail().withMessage("has to be a valid email").bail(),
+    body("email").isEmail().withMessage("Invalid Email").bail(),
     body("password")
       .isStrongPassword({
         minLength: 8,
@@ -114,6 +118,26 @@ const validateBookId = () => {
   return [param("id").isMongoId().withMessage("Invalid book ID")];
 };
 
+const addToCartRules = () => {
+  return [
+    body("userId").trim().isMongoId().withMessage("Invalid user ID"),
+    body("bookId").trim().isMongoId().withMessage("Invalid Book ID"),
+    body("quantity")
+      .exists()
+      .withMessage("Quantity must exist")
+      .bail()
+      .isInt({ min: 1 })
+      .withMessage("Quantity must be a positive integer"),
+  ];
+};
+
+const removeFromCartRules = () => {
+  return [
+    body("userId").trim().isMongoId().withMessage("Invalid user ID"),
+    body("bookId").trim().isMongoId().withMessage("Invalid book ID")
+  ]
+}
+
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (errors.isEmpty()) {
@@ -135,4 +159,7 @@ module.exports = {
   validate,
   validateQueryParams,
   userValidationRules,
+  loginValidationRules,
+  addToCartRules,
+  removeFromCartRules,
 };

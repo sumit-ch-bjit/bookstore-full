@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const Auth = require("../models/authModel");
 const HTTP_STATUS = require("../constants/statusCodes");
@@ -48,28 +49,26 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   //check for user email
-  const user = await Auth.findOne({ email });
+  const auth = await Auth.findOne({ email });
+  const user = await User.findOne({ email });
 
-  console.log(user);
-
-  if (user && (await bcrypt.compare(password, user.password))) {
+  if (auth && (await bcrypt.compare(password, auth.password))) {
     res.json({
       _id: user.id,
       email: user.email,
-      token: generateToken(user._id),
+      token: generateToken(auth),
     });
   } else {
-    res.status(500).json({ message: "internal server error" });
+    res.status(500).json({ message: "An error occured" });
   }
-};
+});
 
-const generateToken = (id) => {
-  console.log("i am here");
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (user) => {
+  return jwt.sign({ user }, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
 };

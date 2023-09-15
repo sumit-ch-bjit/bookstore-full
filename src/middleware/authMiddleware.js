@@ -1,36 +1,88 @@
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
+const { sendResponse } = require("../utils/common");
+const HTTP_STATUS = require("../constants/statusCodes");
 
-const protect = asyncHandler(async (req, res, next) => {
-  let token;
+// const protect = asyncHandler(async (req, res, next) => {
+//   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      // Get token from header
-      token = req.headers.authorization.split(" ")[1];
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.startsWith("Bearer")
+//   ) {
+//     try {
+//       // Get token from header
+//       token = req.headers.authorization.split(" ")[1];
 
-      // verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       // verify token
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      //get user from token
-      req.user = await User.findById(decoded.id).select("-password");
+//       //get user from token
+//       req.user = await Auth.findById(decoded.id).select("-password");
 
-      next();
-    } catch (error) {
-      console.log(error);
-      res.status(401);
-      throw new Error("not authorized");
+//       next();
+//     } catch (error) {
+//       console.log(error);
+//       res.status(401);
+//       throw new Error("not authorized");
+//     }
+//   }
+
+//   if (!token) {
+//     res.status(401);
+//     throw new Error("Not authorized, no token");
+//   }
+// });
+
+const isAuthenticated = (req, res, next) => {
+  try {
+    if (!req.headers.authorization) {
+      return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized access");
     }
+    const token = req.headers.authorization.split(" ")[1];
+    const validate = jwt.verify(token, process.env.JWT_SECRET);
+    if (validate) {
+      next();
+    } else {
+      throw new Error();
+    }
+  } catch (error) {
+    console.log(error);
+    if (error instanceof jwt.JsonWebTokenError) {
+      return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Invalid Credentials");
+    } else if (error instanceof jwt.TokenExpiredError) {
+      return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Please log in again");
+    } else
+      return sendResponse(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        "Internal server error"
+      );
   }
+};
 
-  if (!token) {
-    res.status(401);
-    throw new Error("Not authorized, no token");
+const isAdmin = (req, res, next) => {
+  try {
+    if (!req.headers.authorization) {
+      return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized access");
+    }
+    const token = req.headers.authorization.split(" ")[1];
+    // console.log(token);
+    const validate = jwt.decode(token);
+    console.log(validate)
+    // console.log(validate.user.role);
+    if (validate.user.role === "admin") {
+      next();
+    } else {
+      return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized access");
+    }
+  } catch (error) {
+    console.log(error);
+    return sendResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      "Internal server error"
+    );
   }
-});
+};
 
-module.exports = { protect };
+module.exports = { isAuthenticated, isAdmin };
