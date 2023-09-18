@@ -1,37 +1,39 @@
 const jwt = require("jsonwebtoken");
 const { sendResponse } = require("../utils/common");
 const HTTP_STATUS = require("../constants/statusCodes");
+const asyncHandler = require("express-async-handler");
+const User = require("../models/userModel");
 
-// const protect = asyncHandler(async (req, res, next) => {
-//   let token;
+const protect = asyncHandler(async (req, res, next) => {
+  let token;
 
-//   if (
-//     req.headers.authorization &&
-//     req.headers.authorization.startsWith("Bearer")
-//   ) {
-//     try {
-//       // Get token from header
-//       token = req.headers.authorization.split(" ")[1];
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      // Get token from header
+      token = req.headers.authorization.split(" ")[1];
 
-//       // verify token
-//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-//       //get user from token
-//       req.user = await Auth.findById(decoded.id).select("-password");
+      //get user from token
+      req.user = await Auth.findById(decoded.id).select("-password");
 
-//       next();
-//     } catch (error) {
-//       console.log(error);
-//       res.status(401);
-//       throw new Error("not authorized");
-//     }
-//   }
+      next();
+    } catch (error) {
+      console.log(error);
+      res.status(401);
+      throw new Error("not authorized");
+    }
+  }
 
-//   if (!token) {
-//     res.status(401);
-//     throw new Error("Not authorized, no token");
-//   }
-// });
+  if (!token) {
+    res.status(401);
+    throw new Error("Not authorized, no token");
+  }
+});
 
 const isAuthenticated = (req, res, next) => {
   try {
@@ -41,6 +43,9 @@ const isAuthenticated = (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
     const validate = jwt.verify(token, process.env.JWT_SECRET);
     if (validate) {
+      const decoded = jwt.decode(token)
+      req.user = decoded.user
+
       next();
     } else {
       throw new Error();
@@ -85,4 +90,4 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-module.exports = { isAuthenticated, isAdmin };
+module.exports = { isAuthenticated, isAdmin, protect };

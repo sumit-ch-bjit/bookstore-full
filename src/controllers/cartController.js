@@ -7,7 +7,7 @@ const HTTP_STATUS = require('../constants/statusCodes')
 
 const viewCart = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user._id
 
     // Find the user by ID
     const user = await User.findById(userId);
@@ -28,14 +28,13 @@ const viewCart = async (req, res) => {
   }
 };
 
-module.exports = {
-  viewCart,
-};
 
 const addToCart = async (req, res) => {
   try {
-    const { userId, bookId, quantity } = req.body
-    console.log(userId)
+    const userId = req.user._id
+    console.log(userId, "user id")
+    const { bookId, quantity } = req.body
+    // console.log(userId)
     const [userExists, book] = await Promise.all([
       User.exists({ _id: userId }),
       Book.findById(bookId),
@@ -98,17 +97,14 @@ const addToCart = async (req, res) => {
 };
 
 const removeFromCart = asyncHandler(async (req, res) => {
-  const { userId, bookId, quantity } = req.body;
+  const userId = req.user._id
+  const { bookId, quantity } = req.body;
 
-  const [userExists, cart, book] = await Promise.all([
-    User.exists({ _id: userId }),
+  const [cart, book] = await Promise.all([
     Cart.findOne({ user: userId }),
     Book.findById(bookId),
   ]);
 
-  if (!userExists) {
-    return sendResponse(res, 404, "user not found")
-  }
 
   if (!book) {
     return sendResponse(res, 404, "book not found")

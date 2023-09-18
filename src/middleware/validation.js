@@ -1,4 +1,6 @@
 const { body, validationResult, param, query } = require("express-validator");
+const Cart = require('../models/cartModel')
+const Wallet = require('../models/walletModel')
 
 const validateQueryParams = (req, res, next) => {
   // Define validation rules for each query parameter
@@ -120,7 +122,6 @@ const validateBookId = () => {
 
 const addToCartRules = () => {
   return [
-    body("userId").trim().isMongoId().withMessage("Invalid user ID"),
     body("bookId").trim().isMongoId().withMessage("Invalid Book ID"),
     body("quantity")
       .exists()
@@ -133,8 +134,13 @@ const addToCartRules = () => {
 
 const removeFromCartRules = () => {
   return [
-    body("userId").trim().isMongoId().withMessage("Invalid user ID"),
-    body("bookId").trim().isMongoId().withMessage("Invalid book ID")
+    body("bookId").trim().isMongoId().withMessage("Invalid book ID"),
+    body("quantity")
+      .exists()
+      .withMessage("Quantity must exist")
+      .bail()
+      .isInt({ min: 1 })
+      .withMessage("Quantity must be a positive integer"),
   ]
 }
 
@@ -153,6 +159,57 @@ const validate = (req, res, next) => {
   });
 };
 
+const validateCart = async (req, res, next) => {
+  try {
+    const { cartId } = req.params
+
+    const cart = await Cart.findById(cartId);
+
+    if (!cart) {
+      return res.status(404).json({ message: 'Cart not found' });
+    }
+
+    if (!cart.books || cart.total <= 0) {
+      return res.status(400).json({ message: 'Invalid cart. Please add items to your cart.' });
+    }
+
+    req.cart = cart;
+
+    next();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const checkWalletBalance = async (req, res, next) => {
+  try {
+    const cart = req.cart; // Assuming req.cart is set by a previous middleware
+
+    if (!cart || !cart.user) {
+      return res.status(400).json({ message: 'Invalid cart data' });
+    }
+
+    // Find the user's wallet based on the user in the cart
+    const userWallet = await Wallet.findOne({ user: cart.user });
+
+    if (!userWallet) {
+      return res.status(404).json({ message: 'Wallet not found for this user' });
+    }
+
+    // Check if the wallet balance is sufficient for the cart's total amount
+    if (userWallet.balance >= cart.total) {
+      next(); // Wallet balance is sufficient, proceed with checkout
+    } else {
+      return res.status(400).json({ message: 'Insufficient funds in your wallet.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
 module.exports = {
   bookValidationRules,
   validateBookId,
@@ -162,4 +219,6 @@ module.exports = {
   loginValidationRules,
   addToCartRules,
   removeFromCartRules,
+  validateCart,
+  checkWalletBalance
 };

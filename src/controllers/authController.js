@@ -60,7 +60,7 @@ const login = asyncHandler(async (req, res) => {
     res.json({
       _id: user.id,
       email: user.email,
-      token: generateToken(auth),
+      token: generateToken(user),
     });
   } else {
     res.status(500).json({ message: "An error occured" });

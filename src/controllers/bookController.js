@@ -63,12 +63,12 @@ const getAllBooks = async (req, res) => {
     const message = {};
 
     results.length
-      ? ((message.success = "books found"), (message.status = HTTP_STATUS.OK))
-      : ((message.error = "books not found"),
+      ? ((message.success = true), (message.status = HTTP_STATUS.OK))
+      : ((message.error = false),
         (message.status = HTTP_STATUS.NOT_FOUND));
 
     return res.status(message.status).json({
-      message,
+      success: message.success,
       books: books.length,
       currentPage,
       foundBooks: results.length,
