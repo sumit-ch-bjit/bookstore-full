@@ -59,6 +59,35 @@ const loginValidationRules = () => {
   return [body("email").isEmail().withMessage("Invalid Email").bail()];
 };
 
+const userUpdateValidationRules = () => {
+  return [
+    param('userId').isMongoId().withMessage("invalid user id"),
+    body('firstName').optional().isString().trim(),
+    body('lastName').optional().isString().trim(),
+    body('email').optional().isEmail().normalizeEmail(),
+    body('address').optional().isString().trim(),
+    body('city').optional().isString().trim(),
+    body('state').optional().isString().trim(),
+    body('zip').optional().isPostalCode('US')
+  ]
+}
+
+const bookUpdateValidationRules = () => {
+  return [
+    body('title').optional().isString().trim(),
+    body('author').optional().isString().trim(),
+    body('genre').optional().isString().trim(),
+    body('price').optional().isNumeric(),
+    body('description').optional().isString().trim(),
+    body('publishDate').optional().isDate(),
+    body('ISBN').optional().isString().trim(),
+    body('stock').optional().isNumeric(),
+    body('discountPercentage').optional().isNumeric(),
+    body('discountStartDate').optional().isISO8601(), // Validate ISO date format
+    body('discountEndDate').optional().isISO8601(),
+  ]
+}
+
 const userValidationRules = () => {
   return [
     body("username")
@@ -220,5 +249,7 @@ module.exports = {
   addToCartRules,
   removeFromCartRules,
   validateCart,
-  checkWalletBalance
+  checkWalletBalance,
+  userUpdateValidationRules,
+  bookUpdateValidationRules,
 };

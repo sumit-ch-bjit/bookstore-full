@@ -5,12 +5,14 @@ const {
   addBook,
   getBookById,
   deleteBookById,
+  editBook
 } = require("../../controllers/bookController");
 const {
   bookValidationRules,
   validate,
   validateBookId,
   validateQueryParams,
+  bookUpdateValidationRules,
 } = require("../../middleware/validation");
 
 const { isAdmin, isAuthenticated } = require("../../middleware/authMiddleware");
@@ -28,6 +30,10 @@ router.post(
   isAdmin,
   addBook
 );
+
+
+router.patch('/edit/:bookId', bookUpdateValidationRules(), validate, editBook)
+
 router.delete(
   "/:id",
   validateBookId(),

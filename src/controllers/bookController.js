@@ -104,6 +104,41 @@ const addBook = async (req, res) => {
   }
 };
 
+const editBook = async (req, res) => {
+  try {
+
+    // Extract the bookId from the URL parameters
+    const bookId = req.params.bookId;
+
+    // Find the book by bookId
+    const book = await Book.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    if (req.body.title) book.title = req.body.title;
+    if (req.body.author) book.author = req.body.author;
+    if (req.body.genre) book.genre = req.body.genre;
+    if (req.body.price) book.price = req.body.price;
+    if (req.body.description) book.description = req.body.description;
+    if (req.body.publishDate) book.publishDate = req.body.publishDate;
+    if (req.body.ISBN) book.ISBN = req.body.ISBN;
+    if (req.body.stock) book.stock = req.body.stock;
+    if (req.body.discountPercentage) book.discountPercentage = req.body.discountPercentage;
+    if (req.body.discountStartDate) book.discountStartDate = req.body.discountStartDate;
+    if (req.body.discountEndDate) book.discountEndDate = req.body.discountEndDate;
+
+    // Save the updated book data
+    await book.save();
+
+    return res.status(200).json({ message: 'Book field updated successfully' });
+  } catch (error) {
+    console.error('Error updating book field:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+}
+
 const deleteBookById = async (req, res) => {
   try {
     console.log(req.query);
@@ -133,4 +168,5 @@ module.exports = {
   addBook,
   getBookById,
   deleteBookById,
+  editBook,
 };

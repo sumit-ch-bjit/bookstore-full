@@ -1,6 +1,7 @@
 const Book = require("../models/bookModel");
 const User = require("../models/userModel");
 const Cart = require('../models/cartModel')
+const { calculateTotalPrice } = require('./transactionController')
 const asyncHandler = require('express-async-handler')
 const { sendResponse } = require("../utils/common");
 const HTTP_STATUS = require('../constants/statusCodes')
@@ -31,6 +32,7 @@ const viewCart = async (req, res) => {
 
 const addToCart = async (req, res) => {
   try {
+    console.log("hello from add to cart")
     const userId = req.user._id
     console.log(userId, "user id")
     const { bookId, quantity } = req.body
@@ -62,6 +64,12 @@ const addToCart = async (req, res) => {
         total: book.price * quantity,
       });
 
+
+      // console.log(newCart)
+
+      const discountedPrice = await calculateTotalPrice(newCart._id)
+      console.log(discountedPrice)
+      newCart.discountedTotal = discountedPrice;
       if (newCart) {
         return res
           .status(201)
@@ -85,6 +93,10 @@ const addToCart = async (req, res) => {
     }
 
     cart.total = cart.total + book.price * quantity;
+
+    await cart.save();
+
+    cart.discountedTotal = await calculateTotalPrice(cart._id)
 
     await cart.save();
     return res

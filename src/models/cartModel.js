@@ -25,6 +25,7 @@ const cartSchema = new mongoose.Schema(
       ],
     }, // Array of cart items, each with a product and quantity
     total: { type: Number, required: true },
+    discountedTotal: { type: Number }
   },
   { timestamps: true }
 );
