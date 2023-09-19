@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
-const cron = require('node-cron')
 const cors = require("cors");
 const chalk = require("chalk");
 const dotenv = require("dotenv");
@@ -20,7 +19,6 @@ const accessLogStream = fs.createWriteStream(
 app.use(bodyParser.urlencoded({ extended: false }));
 
 const port = process.env.PORT || 3000;
-console.log(process.env.PORT)
 
 
 // Connect to MongoDB
@@ -30,7 +28,7 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 
-// require('./background/discountUpdater')
+require('./background/discountUpdater')
 
 app.use(morgan("combined", { stream: accessLogStream }));
 

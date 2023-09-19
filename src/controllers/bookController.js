@@ -90,7 +90,7 @@ const getBookById = async (req, res) => {
       sendResponse(res, HTTP_STATUS.NOT_FOUND, "no book found");
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -98,9 +98,9 @@ const addBook = async (req, res) => {
   try {
     const book = new Book(req.body);
     await book.save();
-    res.status(201).json({ message: "Book added successfully", book });
+    res.status(201).json({ success: true, message: "Book added successfully", book });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -114,7 +114,7 @@ const editBook = async (req, res) => {
     const book = await Book.findById(bookId);
 
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      return res.status(404).json({ success: false, message: 'Book not found' });
     }
 
     if (req.body.title) book.title = req.body.title;
@@ -132,10 +132,10 @@ const editBook = async (req, res) => {
     // Save the updated book data
     await book.save();
 
-    return res.status(200).json({ message: 'Book field updated successfully' });
+    return res.status(200).json({ success: true, message: 'Book field updated successfully', book });
   } catch (error) {
     console.error('Error updating book field:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
 
@@ -149,16 +149,16 @@ const deleteBookById = async (req, res) => {
     const book = await Book.findById(id);
 
     if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+      return res.status(404).json({ success: false, message: "Book not found" });
     }
 
     // Delete the book by ID
     await Book.findByIdAndRemove(id);
 
-    return res.status(200).json({ message: "Book deleted successfully" });
+    return res.status(200).json({ success: true, message: "Book deleted successfully" });
   } catch (error) {
     console.error("Error deleting book:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 

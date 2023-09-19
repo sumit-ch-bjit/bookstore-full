@@ -2,6 +2,7 @@ const Book = require('../models/bookModel')
 
 const addDiscount = async (req, res) => {
     try {
+        console.log("adding discount")
         const { bookId } = req.params
         const { discountPercentage, discountStartDate, discountEndDate } = req.body
 
@@ -10,7 +11,6 @@ const addDiscount = async (req, res) => {
         // Find the book by its ID
         const book = await Book.findById(bookId);
 
-        console.log(book)
 
         if (!book) {
             throw new Error('Book not found');
@@ -24,10 +24,10 @@ const addDiscount = async (req, res) => {
         // Save the updated book to the database
         await book.save();
 
-        return { success: true, message: 'Discount added to the book' };
+        return res.status(200).json({ success: true, message: 'Discount added to the book', book });
     } catch (error) {
         console.error('Error adding discount to book:', error);
-        return { success: false, message: 'Failed to add discount to the book' };
+        return res.status(500).json({ success: false, message: 'Failed to add discount to the book' });
     }
 }
 

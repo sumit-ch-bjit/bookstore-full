@@ -45,7 +45,6 @@ const isAuthenticated = (req, res, next) => {
     if (validate) {
       const decoded = jwt.decode(token)
       req.user = decoded.user
-
       next();
     } else {
       throw new Error();
@@ -67,6 +66,7 @@ const isAuthenticated = (req, res, next) => {
 
 const isAdmin = (req, res, next) => {
   try {
+    console.log("i am here")
     if (!req.headers.authorization) {
       return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized access");
     }

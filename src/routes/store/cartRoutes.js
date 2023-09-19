@@ -5,7 +5,7 @@ const { checkout } = require("../../controllers/transactionController");
 const { isAuthenticated } = require("../../middleware/authMiddleware");
 const { addToCartRules, removeFromCartRules, validateCart, checkWalletBalance, validate } = require("../../middleware/validation");
 
-router.get('/view-cart/:userId', isAuthenticated, viewCart)
+router.get('/view-cart', isAuthenticated, viewCart)
 
 router.post(
   "/add-to-cart",
@@ -23,7 +23,7 @@ router.post(
   checkout
 )
 
-router.post("/remove-from-cart",
+router.post("/remove-from-cart/:cartId",
   isAuthenticated,
   removeFromCartRules(),
   validate,

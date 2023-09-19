@@ -3,31 +3,32 @@ const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
 
 // Function to get wallet balance
-getWalletBalance = async (req, res) => {
+const getWalletBalance = async (req, res) => {
     try {
-        const { userId } = req.params
+        const { _id } = req.user.user
         // Fetch the user's wallet based on the user ID from the request
-        const wallet = await Wallet.findOne({ user: userId }).populate('transactions');
+        const wallet = await Wallet.findOne({ user: _id }).populate('transactions');
 
         if (!wallet) {
-            return res.status(404).json({ message: 'Wallet not found' });
+            return res.status(404).json({ success: false, message: 'Wallet not found' });
         }
 
-        res.status(200).json({ balance: wallet.balance, transactions: wallet.transactions });
+        res.status(200).json({ success: true, balance: wallet.balance, transactions: wallet.transactions });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
 // Function to deposit funds into the wallet
-depositFunds = async (req, res) => {
+const depositFunds = async (req, res) => {
     try {
         // console.log("hello")
-        const { amount, user } = req.body;
+        const { amount } = req.body;
+        const user = req.user.user._id
 
         if (!amount || isNaN(amount) || amount <= 0) {
-            return res.status(400).json({ message: 'Invalid amount' });
+            return res.status(400).json({ success: false, message: 'Invalid amount' });
         }
 
         const userExists = await User.exists({ _id: user });
@@ -59,10 +60,10 @@ depositFunds = async (req, res) => {
         });
         await transaction.save();
 
-        res.status(200).json({ message: 'Funds deposited successfully', transaction });
+        res.status(200).json({ success: true, message: 'Funds deposited successfully', transaction });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 

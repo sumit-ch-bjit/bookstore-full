@@ -145,8 +145,8 @@ const bookValidationRules = () => {
   ];
 };
 
-const validateBookId = () => {
-  return [param("id").isMongoId().withMessage("Invalid book ID")];
+const validateMongoId = () => {
+  return [param("id").isMongoId().withMessage("Invalid Mongo ID")];
 };
 
 const addToCartRules = () => {
@@ -170,6 +170,52 @@ const removeFromCartRules = () => {
       .bail()
       .isInt({ min: 1 })
       .withMessage("Quantity must be a positive integer"),
+  ]
+}
+
+const reviewValidationRules = () => {
+  return [
+    body('book')
+      .isMongoId()
+      .withMessage('Review ID must be a valid MongoDB ID'),
+
+    body('rating')
+      .notEmpty()
+      .withMessage('Rating is required')
+      .isNumeric()
+      .withMessage('Rating must be a number')
+      .isFloat({ min: 1, max: 5 })
+      .withMessage('Rating must be between 1 and 5'),
+
+    body('comment')
+      .optional()
+      .isString()
+      .withMessage('Comment must be a string')
+      .isLength({ max: 100 })
+      .withMessage('Comment cannot exceed 100 characters')
+  ]
+}
+
+const reviewUpdateValidationRules = () => {
+  return [
+    param('reviewId')
+      .isMongoId()
+      .withMessage('Review ID must be a valid MongoDB ID'),
+
+    body('rating')
+      .notEmpty()
+      .withMessage('Rating is required')
+      .isNumeric()
+      .withMessage('Rating must be a number')
+      .isFloat({ min: 1, max: 5 })
+      .withMessage('Rating must be between 1 and 5'),
+
+    body('comment')
+      .optional()
+      .isString()
+      .withMessage('Comment must be a string')
+      .isLength({ max: 100 })
+      .withMessage('Comment cannot exceed 100 characters')
   ]
 }
 
@@ -239,9 +285,11 @@ const checkWalletBalance = async (req, res, next) => {
 };
 
 
+
+
 module.exports = {
   bookValidationRules,
-  validateBookId,
+  validateMongoId,
   validate,
   validateQueryParams,
   userValidationRules,
@@ -252,4 +300,6 @@ module.exports = {
   checkWalletBalance,
   userUpdateValidationRules,
   bookUpdateValidationRules,
+  reviewValidationRules,
+  reviewUpdateValidationRules,
 };

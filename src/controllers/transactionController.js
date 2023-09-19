@@ -4,6 +4,7 @@ const Wallet = require('../models/walletModel')
 const asyncHandler = require("express-async-handler");
 const HTTP_STATUS = require("../constants/statusCodes");
 
+
 async function calculateTotalPrice(cartId) {
     try {
         // Find all cart items for the given cart ID and populate the 'product' field to access book details
@@ -18,7 +19,7 @@ async function calculateTotalPrice(cartId) {
         for (const item of books) {
             console.log(item)
             const currentDate = new Date();
-            console.log(item.book)
+            // console.log(item.book)
 
             // Check if the product is eligible for a discount
             console.log(item.book.discountPercentage)
@@ -57,13 +58,13 @@ const checkout = asyncHandler(async (req, res) => {
             .populate("books.book"); // Populate the book details in the cart
 
         if (!cart) {
-            return res.status(404).json({ message: 'Cart not found' });
+            return res.status(404).json({ success: false, message: 'Cart not found' });
         }
 
         const wallet = await Wallet.findOne({ user: cart.user });
 
         if (!wallet) {
-            return res.status(404).json({ message: 'Wallet not found, create your wallet by depositing money' });
+            return res.status(404).json({ success: false, message: 'Wallet not found, create your wallet by depositing money' });
         }
 
         // Calculate the total price of the items in the cart
@@ -71,7 +72,7 @@ const checkout = asyncHandler(async (req, res) => {
 
         // Check if the user's wallet has sufficient funds for the total amount
         if (wallet.balance < cartTotal) {
-            return res.status(400).json({ message: 'Insufficient funds in the wallet' });
+            return res.status(400).json({ success: false, message: 'Insufficient funds in the wallet' });
         }
 
         // Check if there's enough stock for each book in the cart
@@ -81,7 +82,7 @@ const checkout = asyncHandler(async (req, res) => {
 
             if (book.stock < quantityInCart) {
                 // Insufficient stock for this book
-                return res.status(400).json({ message: `Insufficient stock for '${book.title}'` });
+                return res.status(400).json({ success: false, message: `Insufficient stock for '${book.title}'` });
             }
         }
 
@@ -119,13 +120,55 @@ const checkout = asyncHandler(async (req, res) => {
         cart.updatedAt = Date.now();
         await cart.save();
 
-        res.status(200).json({ message: 'Checkout successful', transaction });
+        res.status(200).json({ success: true, message: 'Checkout successful', transaction });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
 
+const getOwnTransactions = async (req, res) => {
+    try {
+        const userId = req.user.user._id; // Assuming you have implemented user authentication middleware
+
+        // Query the database to fetch transactions for the specified user
+        const transactions = await Transaction.find({ user: userId }).exec();
+
+        // Respond with the transactions
+        res.status(200).json({
+            success: true,
+            transactions,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            error: 'Server Error',
+        });
+    }
+};
+
+
+
+
+const getTransactions = async (req, res) => {
+    try {
+        // Extract the userId from the request parameters
+        const userId = req.params.userId;
+
+        // Find transactions belonging to the specified user
+        const transactions = await Transaction.find({ user: userId });
+
+        if (!transactions) {
+            return res.status(404).json({ success: false, message: 'No transactions found for this user' });
+        }
+
+        res.status(200).json({ success: true, transactions });
+    } catch (error) {
+        console.error('Error finding transactions by user:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+}
 
 
 // const checkout = asyncHandler(async (req, res) => {
@@ -253,4 +296,4 @@ const checkout2 = asyncHandler(async (req, res) => {
 });
 
 
-module.exports = { checkout, checkout2, calculateTotalPrice }
+module.exports = { checkout, calculateTotalPrice, getTransactions, getOwnTransactions }

@@ -12,7 +12,7 @@ const register = async (req, res) => {
     if (existingUser) {
       return res
         .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ message: "email already taken" });
+        .json({ success: false, message: "email already taken" });
     }
 
     // Hash the password
@@ -43,29 +43,43 @@ const register = async (req, res) => {
 
     res
       .status(HTTP_STATUS.CREATED)
-      .json({ message: "User registered successfully", newUser });
+      .json({ success: true, message: "User registered successfully", user: newUser });
   } catch (error) {
     res.status(500).json({ message: "internal server error" });
   }
 };
 
-const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  //check for user email
-  const auth = await Auth.findOne({ email });
-  const user = await User.findOne({ email });
+    //check for user email
+    const auth = await Auth.findOne({ email });
+    const user = await User.findOne({ email });
 
-  if (auth && (await bcrypt.compare(password, auth.password))) {
-    res.json({
-      _id: user.id,
-      email: user.email,
-      token: generateToken(user),
-    });
-  } else {
-    res.status(500).json({ message: "An error occured" });
+    if (!auth || !user) {
+      return res.status(200).json({ success: false, message: "user not found" })
+    }
+
+    const genToken = {
+      user,
+      role: auth.role
+    }
+
+    if (auth && (await bcrypt.compare(password, auth.password))) {
+      res.json({
+        success: true,
+        _id: user.id,
+        email: user.email,
+        token: generateToken(genToken),
+      });
+    } else {
+      res.status(500).json({ success: false, message: "Invalid Credentials" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "internal server error" })
   }
-});
+};
 
 const generateToken = (user) => {
   return jwt.sign({ user }, process.env.JWT_SECRET, {

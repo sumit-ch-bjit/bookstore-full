@@ -1,9 +1,10 @@
-const books = require("./books/booksRoute");
+const books = require("./store/booksRoute");
 const users = require("./user/userRoutes");
 const auth = require("./user/authRoutes");
-const cart = require("./books/cartRoutes");
-const reviews = require('./books/reviewRoutes')
-const discount = require('./books/discountRoute')
+const cart = require("./store/cartRoutes");
+const reviews = require('./store/reviewRoutes')
+const discount = require('./store/discountRoute')
+const transaction = require('./store/transactionRoute')
 
 const constructorMethod = (app) => {
   app.use("/api/books", books);
@@ -12,6 +13,7 @@ const constructorMethod = (app) => {
   app.use("/api/cart", cart);
   app.use("/api/reviews", reviews);
   app.use("/api/discount", discount);
+  app.use("/api/transaction", transaction);
 
   app.use("*", (req, res) => {
     res.status(404).json({ error: "Not found" });

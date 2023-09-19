@@ -2,8 +2,27 @@ const User = require('../models/userModel')
 const Auth = require('../models/authModel');
 const Wallet = require('../models/walletModel');
 
-const getMyProfile = (req, res) => {
-  res.status(200).json({ profile: "user profile" });
+const getMyProfile = async (req, res) => {
+  try {
+    console.log(req)
+    // Get the authenticated user's ID from the authentication token or session
+    const userId = req.user.user._id
+
+    console.log(userId)
+
+
+    // Find the user by their ID
+    const user = await User.findById(userId) // Exclude sensitive information like the password
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error('Error retrieving user profile:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
 };
 
 
@@ -15,14 +34,14 @@ const getUserProfile = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     // Return the user's profile
-    return res.status(200).json({ user });
+    return res.status(200).json({ success: true, user });
   } catch (error) {
     console.error('Error getting user profile:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
@@ -35,19 +54,21 @@ const deleteUserProfile = async (req, res) => {
     const auth = await Auth.findOne({ user: userId })
     console.log(user)
     if (!user || !auth) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     } else {
       await User.findByIdAndDelete(userId);
       await Auth.findOneAndDelete({ user: userId });
       await Wallet.findOneAndDelete({ user: userId });
 
-      return res.status(200).json({ message: 'User deleted' });
+      return res.status(200).json({ success: true, message: 'User deleted' });
     }
   } catch (error) {
     console.error('Error deleting user profile:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
+
+
 
 const editUserProfile = async (req, res) => {
   try {
@@ -56,9 +77,9 @@ const editUserProfile = async (req, res) => {
     const user = await User.findById(userId);
     const auth = await Auth.findOne({ user: userId })
     if (!user || !auth) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     } else {
-      await User.findByIdAndUpdate(userId, {
+      const updatedUser = await User.findByIdAndUpdate(userId, {
         firstName: firstName || user.firstName,
         lastName: lastName || user.lastName,
         email: email || user.email,
@@ -71,11 +92,11 @@ const editUserProfile = async (req, res) => {
       await Auth.findOneAndUpdate({ user: userId }, {
         email: email || user.email
       });
-      return res.status(200).json({ message: 'User updated' });
+      return res.status(200).json({ success: true, message: 'User updated', updatedUser });
     }
   } catch (error) {
     console.error('Error updating user profile:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
 

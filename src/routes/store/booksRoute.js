@@ -10,9 +10,9 @@ const {
 const {
   bookValidationRules,
   validate,
-  validateBookId,
   validateQueryParams,
   bookUpdateValidationRules,
+  validateMongoId,
 } = require("../../middleware/validation");
 
 const { isAdmin, isAuthenticated } = require("../../middleware/authMiddleware");
@@ -21,7 +21,7 @@ const { isAdmin, isAuthenticated } = require("../../middleware/authMiddleware");
 
 // GET /books
 router.get("/", validateQueryParams, getAllBooks);
-router.get("/:id", validateBookId(), validate, getBookById);
+router.get("/:id", validateMongoId(), validate, getBookById);
 router.post(
   "/",
   bookValidationRules(),
@@ -32,11 +32,11 @@ router.post(
 );
 
 
-router.patch('/edit/:bookId', bookUpdateValidationRules(), validate, editBook)
+router.patch('/edit/:bookId', bookUpdateValidationRules(), validate, editBook);
 
 router.delete(
-  "/:id",
-  validateBookId(),
+  "/delete/:id",
+  validateMongoId(),
   validate,
   isAuthenticated,
   isAdmin,
