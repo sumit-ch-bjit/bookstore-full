@@ -15,6 +15,13 @@ const constructorMethod = (app) => {
   app.use("/api/discount", discount);
   app.use("/api/transaction", transaction);
 
+  app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+      return res.status(400).json({ message: "invalid json format" })
+    }
+    next();
+  });
+
   app.use("*", (req, res) => {
     res.status(404).json({ error: "Not found" });
   });
