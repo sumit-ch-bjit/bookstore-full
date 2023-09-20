@@ -43,7 +43,7 @@ async function applyDiscounts() {
 //     applyDiscounts();
 // });
 
-cron.schedule('* * * * *', () => {
+cron.schedule('*/15 * * * *', () => {
     console.log('Running discount update task every 15 minutes...');
     applyDiscounts();
 });
