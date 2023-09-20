@@ -9,6 +9,8 @@ const configRoutes = require("./routes");
 const morgan = require("morgan");
 const fs = require("fs");
 const path = require("path");
+dotenv.config();
+
 const accessLogStream = fs.createWriteStream(
   path.join(__dirname, "access.log"),
   { flags: "a" }
@@ -17,7 +19,7 @@ const accessLogStream = fs.createWriteStream(
 app.use(bodyParser.urlencoded({ extended: false }));
 
 const port = process.env.PORT || 3000;
-dotenv.config();
+
 
 // Connect to MongoDB
 connectDB();
@@ -26,10 +28,13 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 
+require('./background/discountUpdater')
+
 app.use(morgan("combined", { stream: accessLogStream }));
 
 // Routes
 configRoutes(app);
+
 
 app.listen(port, () => {
   console.log(

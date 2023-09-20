@@ -4,10 +4,10 @@ const { register, login } = require("../../controllers/authController");
 const {
   userValidationRules,
   validate,
+  loginValidationRules,
 } = require("../../middleware/validation");
-const { protect } = require("../../middleware/authMiddleware");
 
 router.post("/register", userValidationRules(), validate, register);
-router.post("/login", login);
+router.post("/login", loginValidationRules(), validate, login);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const Auth = require("../models/authModel");
 const HTTP_STATUS = require("../constants/statusCodes");
@@ -11,7 +12,7 @@ const register = async (req, res) => {
     if (existingUser) {
       return res
         .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ message: "email already taken" });
+        .json({ success: false, message: "email already taken" });
     }
 
     // Hash the password
@@ -42,34 +43,46 @@ const register = async (req, res) => {
 
     res
       .status(HTTP_STATUS.CREATED)
-      .json({ message: "User registered successfully", newUser });
+      .json({ success: true, message: "User registered successfully", user: newUser });
   } catch (error) {
     res.status(500).json({ message: "internal server error" });
   }
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  //check for user email
-  const user = await Auth.findOne({ email });
+    //check for user email
+    const auth = await Auth.findOne({ email });
+    const user = await User.findOne({ email });
 
-  console.log(user);
+    if (!auth || !user) {
+      return res.status(200).json({ success: false, message: "user not found" })
+    }
 
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.json({
-      _id: user.id,
-      email: user.email,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(500).json({ message: "internal server error" });
+    const genToken = {
+      user,
+      role: auth.role
+    }
+
+    if (auth && (await bcrypt.compare(password, auth.password))) {
+      res.json({
+        success: true,
+        _id: user.id,
+        email: user.email,
+        token: generateToken(genToken),
+      });
+    } else {
+      res.status(500).json({ success: false, message: "Invalid Credentials" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "internal server error" })
   }
 };
 
-const generateToken = (id) => {
-  console.log("i am here");
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (user) => {
+  return jwt.sign({ user }, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
 };

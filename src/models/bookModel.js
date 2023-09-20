@@ -14,9 +14,8 @@ const bookSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  discountPercentage: {
+  discountedPrice: {
     type: Number,
-    default: 0,
   },
   description: String,
   publishDate: Date,
@@ -26,6 +25,12 @@ const bookSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  discountPercentage: {
+    type: Number,
+    default: 0, // Default discount percentage is 0 (no discount)
+  },
+  discountStartDate: Date, // Start date of the discount
+  discountEndDate: Date,
 });
 
 const Book = mongoose.model("Book", bookSchema);

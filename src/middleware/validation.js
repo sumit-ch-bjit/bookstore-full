@@ -1,4 +1,6 @@
 const { body, validationResult, param, query } = require("express-validator");
+const Cart = require('../models/cartModel')
+const Wallet = require('../models/walletModel')
 
 const validateQueryParams = (req, res, next) => {
   // Define validation rules for each query parameter
@@ -53,6 +55,39 @@ const validateQueryParams = (req, res, next) => {
   });
 };
 
+const loginValidationRules = () => {
+  return [body("email").isEmail().withMessage("Invalid Email").bail()];
+};
+
+const userUpdateValidationRules = () => {
+  return [
+    param('userId').isMongoId().withMessage("invalid user id"),
+    body('firstName').optional().isString().trim(),
+    body('lastName').optional().isString().trim(),
+    body('email').optional().isEmail().normalizeEmail(),
+    body('address').optional().isString().trim(),
+    body('city').optional().isString().trim(),
+    body('state').optional().isString().trim(),
+    body('zip').optional().isPostalCode('US')
+  ]
+}
+
+const bookUpdateValidationRules = () => {
+  return [
+    body('title').optional().isString().trim(),
+    body('author').optional().isString().trim(),
+    body('genre').optional().isString().trim(),
+    body('price').optional().isNumeric(),
+    body('description').optional().isString().trim(),
+    body('publishDate').optional().isDate(),
+    body('ISBN').optional().isString().trim(),
+    body('stock').optional().isNumeric(),
+    body('discountPercentage').optional().isNumeric(),
+    body('discountStartDate').optional().isISO8601(), // Validate ISO date format
+    body('discountEndDate').optional().isISO8601(),
+  ]
+}
+
 const userValidationRules = () => {
   return [
     body("username")
@@ -61,7 +96,7 @@ const userValidationRules = () => {
       .isAlphanumeric()
       .withMessage("cannot be empty and must be alphanumeric")
       .bail(),
-    body("email").isEmail().withMessage("has to be a valid email").bail(),
+    body("email").isEmail().withMessage("Invalid Email").bail(),
     body("password")
       .isStrongPassword({
         minLength: 8,
@@ -110,9 +145,94 @@ const bookValidationRules = () => {
   ];
 };
 
-const validateBookId = () => {
-  return [param("id").isMongoId().withMessage("Invalid book ID")];
+const validateMongoId = () => {
+  return [param("id").isMongoId().withMessage("Invalid Mongo ID")];
 };
+
+const notTooBigNumber = (value) => {
+  if (typeof value !== 'number' || value <= 1000000) {
+    // The number is not too big, it's valid
+    return true;
+  }
+  // The number is too big, return false
+  return false;
+};
+
+const addToCartRules = () => {
+  return [
+    body("bookId").trim().isMongoId().withMessage("Invalid Book ID"),
+    body("quantity")
+      .exists()
+      .withMessage("Quantity must exist")
+      .bail()
+      .isInt({ min: 1 })
+      .withMessage("Quantity must be a positive integer"),
+    body("quantity")
+      .custom(notTooBigNumber)
+      .withMessage("Quantity cannot be bigger than 1000000")
+  ];
+};
+
+const removeFromCartRules = () => {
+  return [
+    body("bookId").trim().isMongoId().withMessage("Invalid book ID"),
+    body("quantity")
+      .exists()
+      .withMessage("Quantity must exist")
+      .bail()
+      .isInt({ min: 1 })
+      .withMessage("Quantity must be a positive integer"),
+    body("quantity")
+      .custom(notTooBigNumber)
+      .withMessage("Quantity cannot be bigger than 1000000")
+  ]
+}
+
+const reviewValidationRules = () => {
+  return [
+    body('book')
+      .isMongoId()
+      .withMessage('Review ID must be a valid MongoDB ID'),
+
+    body('rating')
+      .notEmpty()
+      .withMessage('Rating is required')
+      .isNumeric()
+      .withMessage('Rating must be a number')
+      .isFloat({ min: 1, max: 5 })
+      .withMessage('Rating must be between 1 and 5'),
+
+    body('comment')
+      .optional()
+      .isString()
+      .withMessage('Comment must be a string')
+      .isLength({ max: 100 })
+      .withMessage('Comment cannot exceed 100 characters')
+  ]
+}
+
+const reviewUpdateValidationRules = () => {
+  return [
+    param('reviewId')
+      .isMongoId()
+      .withMessage('Review ID must be a valid MongoDB ID'),
+
+    body('rating')
+      .notEmpty()
+      .withMessage('Rating is required')
+      .isNumeric()
+      .withMessage('Rating must be a number')
+      .isFloat({ min: 1, max: 5 })
+      .withMessage('Rating must be between 1 and 5'),
+
+    body('comment')
+      .optional()
+      .isString()
+      .withMessage('Comment must be a string')
+      .isLength({ max: 100 })
+      .withMessage('Comment cannot exceed 100 characters')
+  ]
+}
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
@@ -129,10 +249,72 @@ const validate = (req, res, next) => {
   });
 };
 
+const validateCart = async (req, res, next) => {
+  try {
+    const { cartId } = req.params
+
+    const cart = await Cart.findById(cartId);
+
+    if (!cart) {
+      return res.status(404).json({ message: 'Cart not found' });
+    }
+
+    if (!cart.books || cart.total <= 0) {
+      return res.status(400).json({ message: 'Invalid cart. Please add items to your cart.' });
+    }
+
+    req.cart = cart;
+
+    next();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const checkWalletBalance = async (req, res, next) => {
+  try {
+    const cart = req.cart; // Assuming req.cart is set by a previous middleware
+
+    if (!cart || !cart.user) {
+      return res.status(400).json({ message: 'Invalid cart data' });
+    }
+
+    // Find the user's wallet based on the user in the cart
+    const userWallet = await Wallet.findOne({ user: cart.user });
+
+    if (!userWallet) {
+      return res.status(404).json({ message: 'Wallet not found for this user' });
+    }
+
+    // Check if the wallet balance is sufficient for the cart's total amount
+    if (userWallet.balance >= cart.total) {
+      next(); // Wallet balance is sufficient, proceed with checkout
+    } else {
+      return res.status(400).json({ message: 'Insufficient funds in your wallet.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+
 module.exports = {
   bookValidationRules,
-  validateBookId,
+  validateMongoId,
   validate,
   validateQueryParams,
   userValidationRules,
+  loginValidationRules,
+  addToCartRules,
+  removeFromCartRules,
+  validateCart,
+  checkWalletBalance,
+  userUpdateValidationRules,
+  bookUpdateValidationRules,
+  reviewValidationRules,
+  reviewUpdateValidationRules,
 };
