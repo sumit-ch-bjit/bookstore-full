@@ -149,6 +149,15 @@ const validateMongoId = () => {
   return [param("id").isMongoId().withMessage("Invalid Mongo ID")];
 };
 
+const notTooBigNumber = (value) => {
+  if (typeof value !== 'number' || value <= 1000000) {
+    // The number is not too big, it's valid
+    return true;
+  }
+  // The number is too big, return false
+  return false;
+};
+
 const addToCartRules = () => {
   return [
     body("bookId").trim().isMongoId().withMessage("Invalid Book ID"),
@@ -158,6 +167,9 @@ const addToCartRules = () => {
       .bail()
       .isInt({ min: 1 })
       .withMessage("Quantity must be a positive integer"),
+    body("quantity")
+      .custom(notTooBigNumber)
+      .withMessage("Quantity cannot be bigger than 1000000")
   ];
 };
 
@@ -170,6 +182,9 @@ const removeFromCartRules = () => {
       .bail()
       .isInt({ min: 1 })
       .withMessage("Quantity must be a positive integer"),
+    body("quantity")
+      .custom(notTooBigNumber)
+      .withMessage("Quantity cannot be bigger than 1000000")
   ]
 }
 
