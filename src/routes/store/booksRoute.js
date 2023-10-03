@@ -24,25 +24,25 @@ router.get("/", validateQueryParams, getAllBooks);
 router.get("/:id", validateMongoId(), validate, getBookById);
 router.post(
   "/",
-  // bookValidationRules(),
-  // validate,
-  // isAuthenticated,
-  // isAdmin,
+  bookValidationRules(),
+  validate,
+  isAuthenticated,
+  isAdmin,
   addBook
 );
 
 
 router.patch('/edit/:bookId',
-  // bookUpdateValidationRules(),
-  // validate,
+  bookUpdateValidationRules(),
+  validate,
   editBook);
 
 router.delete(
   "/delete/:id",
-  // validateMongoId(),
-  // validate,
-  // isAuthenticated,
-  // isAdmin,
+  validateMongoId(),
+  validate,
+  isAuthenticated,
+  isAdmin,
   deleteBookById
 );
 
