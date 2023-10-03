@@ -2,12 +2,9 @@ const Book = require('../models/bookModel')
 
 const addDiscount = async (req, res) => {
     try {
-        console.log("adding discount")
         const { bookId } = req.params
         const { discountPercentage, discountStartDate, discountEndDate } = req.body
 
-        console.log(bookId)
-        console.log(discountPercentage)
         // Find the book by its ID
         const book = await Book.findById(bookId);
 

@@ -17,12 +17,10 @@ async function calculateTotalPrice(cartId) {
 
         // Iterate through each cart item and calculate the price
         for (const item of books) {
-            console.log(item)
             const currentDate = new Date();
             // console.log(item.book)
 
             // Check if the product is eligible for a discount
-            console.log(item.book.discountPercentage)
             if (
                 item.book.discountPercentage > 0 && // Product has a discount
                 item.book.discountStartDate <= currentDate && // Discount is active

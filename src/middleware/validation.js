@@ -13,6 +13,9 @@ const validateQueryParams = (req, res, next) => {
       .optional()
       .isInt({ min: 1 })
       .withMessage("PageSize must be a positive integer"),
+    query("pageSize")
+      .custom(notTooBigNumber)
+      .withMessage("Quantity cannot be bigger than 1000000"),
     query("genre")
       .optional()
       .isString()
@@ -299,6 +302,22 @@ const checkWalletBalance = async (req, res, next) => {
   }
 };
 
+const discountValidationRules = () => {
+  return [
+    body('discountPercentage')
+      .isInt({ min: 1, max: 100 })
+      .withMessage('Discount percentage must be between 1 and 100'),
+
+    body('discountStartDate')
+      .isISO8601()
+      .withMessage('Invalid start date format'),
+
+    body('discountEndDate')
+      .isISO8601()
+      .withMessage('Invalid end date format'),
+  ]
+}
+
 
 
 
@@ -309,6 +328,7 @@ module.exports = {
   validateQueryParams,
   userValidationRules,
   loginValidationRules,
+  discountValidationRules,
   addToCartRules,
   removeFromCartRules,
   validateCart,
@@ -318,3 +338,4 @@ module.exports = {
   reviewValidationRules,
   reviewUpdateValidationRules,
 };
+

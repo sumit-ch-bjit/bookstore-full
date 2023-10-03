@@ -96,6 +96,7 @@ const getBookById = async (req, res) => {
 
 const addBook = async (req, res) => {
   try {
+    console.log(req.body)
     const book = new Book(req.body);
     await book.save();
     res.status(201).json({ success: true, message: "Book added successfully", book });

@@ -74,7 +74,7 @@ const deleteReview = async (req, res) => {
 const addRating = async (req, res) => {
     try {
         const { book, rating } = req.body;
-        const user = req.user._id;
+        const user = req.user.user._id;
 
         // Check if the user has already reviewed this book; if yes, update the rating
         const existingReview = await Review.findOne({ user, book });
@@ -99,7 +99,7 @@ const addRating = async (req, res) => {
 const removeRating = async (req, res) => {
     try {
         const bookId = req.params.bookId;
-        const user = req.user._id;
+        const user = req.user.user._id;
 
         // Find the user's review for the specified book
         const review = await Review.findOne({ user, book: bookId });
