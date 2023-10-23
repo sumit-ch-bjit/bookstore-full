@@ -8,14 +8,26 @@ const chalk = require("chalk");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
+    let mongoURL;
+
+    if (process.env.NODE_ENV === 'production') {
+      // In production or Docker Compose, use the service name as the hostname
+      mongoURL = 'mongodb://mongodb:27017/test-database';
+    } else {
+      // In local development, use localhost
+      mongoURL = 'mongodb://localhost:27017/test-database';
+    }
+
+    await mongoose.connect(mongoURL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
+
     console.log(`${chalk.bold.bgBlue("Connected to MongoDB")}`);
   } catch (error) {
-    console.log('could not connect to mongodb', error)
+    console.error('Could not connect to MongoDB:', error.message);
   }
 };
+
 
 module.exports = connectDB;
