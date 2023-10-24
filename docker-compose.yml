@@ -28,5 +28,13 @@ services:
     depends_on:
       - mongodb
 
+  frontend:
+    image: bookstore-frontend
+    container_name: my-frontend-container
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
 volumes:
   mongodb-data:
