@@ -25,11 +25,15 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      JWT_SECRET: abc@123  # Add this line with your actual JWT secret value
     depends_on:
       - mongodb
 
   frontend:
-    image: bookstore-frontend
+    # image: bookstore-frontend-new
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: my-frontend-container
     ports:
       - "5173:5173"

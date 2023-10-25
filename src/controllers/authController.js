@@ -51,30 +51,40 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
+    // return res.status(200).json({ message: "login done" })
+    console.log("hello")
     const { email, password } = req.body;
+    console.log(email, password);
 
     //check for user email
     const auth = await Auth.findOne({ email });
     const user = await User.findOne({ email });
 
+
+
     if (!auth || !user) {
       return res.status(200).json({ success: false, message: "user not found" })
     }
+
+    // console.log(auth, user)
 
     const genToken = {
       user,
       role: auth.role
     }
 
+    // console.log(genToken)
+
     if (auth && (await bcrypt.compare(password, auth.password))) {
-      res.json({
+      console.log("login successful")
+      return res.status(200).json({
         success: true,
         _id: user.id,
         email: user.email,
         token: generateToken(genToken),
       });
     } else {
-      res.status(500).json({ success: false, message: "Invalid Credentials" });
+      res.status(400).json({ success: false, message: "Invalid Credentials" });
     }
   } catch (error) {
     res.status(500).json({ success: false, message: "internal server error" })
